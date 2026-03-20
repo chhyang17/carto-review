@@ -4,7 +4,7 @@ A self-contained HTML tool for structured, multi-round cartographic map reviews 
 
 No installation. No server. No login. Open the file, fill it in, save it.
 
-![Map Review Tracker]([carto-review.png])
+![Map Review Tracker](carto-review.png)
 
 ---
 
