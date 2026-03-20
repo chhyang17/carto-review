@@ -3,6 +3,7 @@
 A self-contained HTML tool for structured, multi-round cartographic map reviews — built for GIS teams that pass files back and forth between mappers and reviewers without a shared project management system.
 
 No installation. No server. No login. Open the file, fill it in, save it.
+[carto-review_public](https://chhyang17.github.io/carto-review/)
 
 ![Map Review Tracker](carto-review.png)
 
