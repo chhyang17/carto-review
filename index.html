@@ -333,6 +333,8 @@ td:first-child { text-align: center; vertical-align: middle; padding: 7px 4px; }
 .tab-add-btn { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; margin-bottom: 2px; font-size: 18px; color: #888; background: none; border: none; cursor: pointer; border-radius: 4px; font-family: inherit; }
 .tab-add-btn:hover { background: #d0d0cc; color: #1a1a1a; }
 
+.sections-btn-badge { font-size: 9.5px; font-weight: 600; padding: 1px 5px; border-radius: 8px; background: #2e7d32; color: #fff; margin-left: 2px; }
+
 /* ── Mode toggle ── */
 .mode-toggle { display: inline-flex; border: 1px solid #3a3a3a; border-radius: 6px; overflow: hidden; flex-shrink: 0; }
 .mode-btn { padding: 4px 12px; font-size: 11px; font-family: inherit; font-weight: 500; cursor: pointer; border: none; background: transparent; color: #777; transition: background 0.15s, color 0.15s; white-space: nowrap; }
@@ -453,11 +455,14 @@ td:first-child { text-align: center; vertical-align: middle; padding: 7px 4px; }
   /* Reset every clipping/scrolling container to natural height */
   *, *::before, *::after { overflow: visible !important; }
   html, body { height: auto !important; overflow: visible !important; }
-  .app         { height: auto !important; overflow: visible !important; display: block !important; }
-  .content-pane{ height: auto !important; overflow: visible !important; display: block !important; flex: none !important; }
-  .map-sheet   { display: none !important; height: auto !important; overflow: visible !important; }
-  .map-sheet.active { display: block !important; height: auto !important; overflow: visible !important; }
-  .map-header  { position: static !important; z-index: auto !important; border-bottom: 2px solid #1a1a1a; }
+  .app          { height: auto !important; overflow: visible !important; display: block !important; }
+  .content-pane { height: auto !important; overflow: visible !important; display: block !important; flex: none !important; }
+
+  /* Print ALL map tabs, one per page */
+  .map-sheet    { display: block !important; height: auto !important; overflow: visible !important; page-break-after: always; }
+  .map-sheet:last-child { page-break-after: auto; }
+
+  .map-header   { position: static !important; z-index: auto !important; border-bottom: 2px solid #1a1a1a; }
   .sections-scroll { flex: none !important; height: auto !important; overflow: visible !important; padding: 0; }
 
   /* Force all sections open */
@@ -479,7 +484,7 @@ td:first-child { text-align: center; vertical-align: middle; padding: 7px 4px; }
   .section-block { page-break-inside: avoid; margin-bottom: 6px; border: 1px solid #e0e0e0; }
   td, th { word-break: break-word; }
 
-  /* Keep top bar visible as a header */
+  /* Keep top bar visible as a header on each page */
   .top-bar { display: flex !important; height: auto !important; }
   .top-bar .project-area { display: flex !important; }
 }
@@ -502,7 +507,7 @@ td:first-child { text-align: center; vertical-align: middle; padding: 7px 4px; }
         <button class="mode-btn" id="mode-btn-reviewer" onclick="setMode('reviewer')">Reviewer</button>
       </div>
       <span class="mode-badge" id="mode-badge" style="display:none"></span>
-      <button class="btn btn-ghost" onclick="openSectionEditor()">
+      <button class="btn btn-ghost" id="sections-btn" onclick="openSectionEditor()">
         <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="2.5" stroke="currentColor" stroke-width="1.4"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.05 3.05l1.41 1.41M11.54 11.54l1.41 1.41M3.05 12.95l1.41-1.41M11.54 4.46l1.41-1.41" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
         Sections
       </button>
@@ -685,6 +690,7 @@ function closeSectionEditor() {
   document.getElementById('sec-editor-overlay').classList.remove('visible');
   _secEditorActive = null;
   rebuildAllMapSections();
+  updateSectionsBtnBadge();
 }
 
 function renderSecEditorSidebar() {
@@ -1376,6 +1382,32 @@ function switchTab(mapId) {
   document.getElementById('tab-'+mapId)?.classList.add('active');
   activeMapId=mapId;
   if(panelOpen && panelMapId !== mapId) closePanel();
+  // Refresh section editor sidebar if open, so it reflects the new tab's customizations
+  if (document.getElementById('sec-editor-overlay')?.classList.contains('visible')) {
+    _secEditorActive = null;
+    renderSecEditorSidebar();
+    document.getElementById('secEditPane').innerHTML = '<div class="sec-edit-empty">Select a section to view or edit</div>';
+    document.getElementById('secAddElBtn').style.display = 'none';
+    document.getElementById('secDelBtn').style.display   = 'none';
+  }
+  // Update Sections button badge to show custom count for this tab
+  updateSectionsBtnBadge();
+}
+
+function updateSectionsBtnBadge() {
+  const mid = activeMapId;
+  const customCount = (mapCustomSections[mid]||[]).length;
+  const biExtCount  = Object.values(mapBuiltInExtensions[mid]||{}).reduce((a,v)=>a+(v?.length||0),0);
+  const total = customCount + biExtCount;
+  const btn = document.getElementById('sections-btn');
+  if (!btn) return;
+  const badge = btn.querySelector('.sections-btn-badge');
+  if (total > 0) {
+    if (badge) badge.textContent = '+'+total;
+    else btn.insertAdjacentHTML('beforeend',`<span class="sections-btn-badge">+${total}</span>`);
+  } else {
+    if (badge) badge.remove();
+  }
 }
 function startRenameTab(mapId, e) {
   e.stopPropagation();
