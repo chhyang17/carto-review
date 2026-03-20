@@ -61,7 +61,7 @@ This tool makes the review file the source of truth. Every round of comments is 
 ## How to use
 
 ### First time
-1. Download `map_review_vX.html`
+1. Download `index.html`
 2. Open it in any modern browser (Chrome, Edge, Firefox, Safari)
 3. Enter your project code in the top bar
 4. Set the mode to **Mapper** or **Reviewer**
